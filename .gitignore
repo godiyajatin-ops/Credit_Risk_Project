@@ -1,0 +1,12 @@
+# Ignore large dataset files
+data/raw/
+data/processed/
+*.csv
+*.xlsx
+*.zip
+
+# Ignore local notebook checkpoint configurations
+.ipynb_checkpoints/
+__pycache__/
+.env
+.DS_Store
