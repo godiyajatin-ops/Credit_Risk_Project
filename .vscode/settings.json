@@ -1,24 +1,35 @@
 {
-    "sqltools.connections": [
-        {
-            "ssh": "Disabled",
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 5432,
-            "driver": "PostgreSQL",
-            "name": "IPL_DATA",
-            "database": "IPL_DATA",
-            "username": "postgres"
-        },
-        {
-            "ssh": "Disabled",
-            "previewLimit": 50,
-            "server": "localhost",
-            "port": 5432,
-            "driver": "PostgreSQL",
-            "name": "CreditRiskDB",
-            "database": "CreditRiskDB",
-            "username": "postgres"
+    // Auto-Save Configuration (Prevents unsaved buffer bugs in Git)
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+
+    // File Formatting Standards
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+    // Language-Specific Formatters & Rules
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "always"
         }
-    ]
+    },
+    "[sql]": {
+        "editor.tabSize": 2
+    },
+    "[markdown]": {
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "strings": "off",
+            "other": "off"
+        }
+    },
+
+    // Git & Terminal Settings
+    "git.autofetch": true,
+    "terminal.integrated.defaultProfile.windows": "PowerShell"
 }
