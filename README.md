@@ -55,6 +55,32 @@ Raw data are not included. Place the official files in `data/raw/`:
 
 The project ignores raw data files so they are not committed to Git.
 
+## SQL and Power BI reporting
+
+The Python workflow handles model development and generated evaluation artifacts. PostgreSQL and Power BI provide the separate analyst/stakeholder view:
+
+- `sql/core_artifacts.sql` creates `analytics.v_credit_risk_engineered` and includes cohort-level default-rate queries, income tiers, organization-type comparisons, age-cohort analysis, and a defaulter/non-defaulter financial-burden summary.
+- Before running the SQL file, import the cleaned application data into PostgreSQL as `public.credit_risk_data` using lower-case column identifiers. The age and loan-to-income queries read from the engineered view rather than assuming derived columns already exist in the base table.
+- `dashboards/credit_risk_dashboard.pbix` is the Power BI artifact. The screenshots below are included as dashboard previews; refresh the underlying tables and re-check unit labels after regenerating the data/model outputs.
+
+### Dashboard previews
+
+![Credit risk dashboard overview](assets/dashboard_overview.png)
+
+![Credit risk underwriting dashboard](assets/dashboard_underwiring.png)
+
+## Business questions supported by the project
+
+The project is designed to answer the following questions. Final numeric answers should be taken from the regenerated result files, not the older committed CSVs.
+
+| Business question | Source of the current answer |
+|---|---|
+| How does default prevalence vary across borrower and income cohorts? | SQL queries in `sql/core_artifacts.sql` and the Power BI cohort visuals |
+| How do model quality and calibration compare across candidates? | `results/cv_metrics.csv`, `results/cv_fold_metrics.csv`, and `results/test_calibration.csv` |
+| How does the selected decision threshold change approval and risk outcomes? | `results/test_operating_points.csv` and `results/headline_costs.csv` |
+| Do bureau and previous-application aggregates add predictive signal consistently across folds? | `results/ablation_study.csv` and `results/ablation_fold_diffs.csv` |
+| How stable are tree-SHAP and logistic-regression feature rankings after reducing collinear feature triplets? | `results/shap_lr_rank_correlation.csv` and `results/shap_lr_rank_correlation_robust.csv` |
+
 ## Reproducing the analysis
 
 Use a fresh Python environment compatible with the packages in `requirements.txt`.
