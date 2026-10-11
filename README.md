@@ -98,7 +98,8 @@ The updated notebook writes machine-readable outputs instead of requiring values
 
 - `results/cv_metrics.csv` and `results/cv_fold_metrics.csv`: model and fold-level ranking metrics.
 - `results/threshold_table.csv`: training-side threshold sensitivity under the illustrative cost ratios.
-- `results/test_metrics.csv` and `results/test_paired_diffs.csv`: holdout bootstrap intervals and paired comparisons.
+- `results/test_metrics.csv` and `results/test_paired_diffs.csv`: holdout bootstrap intervals and paired comparisons, including champion versus runner-up.
+- `results/champion_runnerup_fold_diffs.csv`: fold-aligned PR-AUC and ROC-AUC differences between XGBoost and LightGBM.
 - `results/test_calibration.csv`: raw-score versus calibrated test Brier score, mean predicted probability versus observed prevalence, and score discreteness diagnostics.
 - `results/headline_costs.csv`: point estimates for approving everyone, v1 at 0.50, v1 at its own OOF-calibrated threshold, and the selected champion policy.
 - `results/test_scored.csv`: locked holdout predictions used to audit point estimates.
@@ -109,7 +110,7 @@ The updated notebook writes machine-readable outputs instead of requiring values
 - `results/run_manifest.json`: champion, data split, feature counts, assumptions, and environment versions.
 - `results/thin_file_segments.csv`: holdout metrics by whether an applicant has linked bureau history; descriptive only.
 
-After rerunning, interpret PR-AUC relative to default prevalence and include uncertainty when comparing models. A small difference between XGBoost and LightGBM should be reported as a tie when the evidence does not support a meaningful distinction. Do not present a model's ranking lift as proof of causal structure, regulatory compliance, or deployment readiness.
+After rerunning, interpret PR-AUC relative to default prevalence and include uncertainty when comparing models. A small difference between XGBoost and LightGBM should be described as inconclusive when the paired holdout interval includes zero and fold-level results do not show a consistent advantage. Do not present a model's ranking lift as proof of causal structure, regulatory compliance, or deployment readiness.
 
 ## Limitations
 
