@@ -20,6 +20,7 @@ REQUIRED = [
     "cv_fold_metrics.csv",
     "threshold_table.csv",
     "test_metrics.csv",
+    "test_calibration.csv",
     "test_paired_diffs.csv",
     "test_operating_points.csv",
     "headline_costs.csv",
@@ -74,6 +75,15 @@ def main() -> int:
     counts = folds.groupby("model")["fold"].nunique()
     if not (counts == 5).all():
         fail("Each CV model must have exactly five distinct validation folds.")
+    feature_counts = manifest.get("feature_counts", {})
+    expected_counts = {
+        "application_only": 104,
+        "application_plus_bureau": 115,
+        "application_plus_previous": 113,
+        "full_relational_store": 124,
+    }
+    if feature_counts != expected_counts:
+        fail(f"Feature-count manifest mismatch; expected {expected_counts}, found {feature_counts}.")
 
     # G3: Holdout table matches manifest and holds valid model scores.
     if len(scored) != int(manifest.get("test_rows", -1)):
@@ -105,6 +115,22 @@ def main() -> int:
         fail(f"headline_costs.csv must contain exactly one row for {champion_label!r}.")
     if not np.isclose(recomputed_cost, float(selected_costs.iloc[0]), atol=0.01, rtol=0):
         fail(f"Champion cost mismatch: scored={recomputed_cost:.4f}, headline={float(selected_costs.iloc[0]):.4f}.")
+
+    # Calibration statistics must be generated from the same locked test scores.
+    calibration = pd.read_csv(RESULTS / "test_calibration.csv")
+    if set(calibration["score_type"]) != {
+        "raw weighted model score (not calibrated)", "isotonic-calibrated probability"
+    }:
+        fail("test_calibration.csv has unexpected or missing score types.")
+    calibrated_row = calibration.loc[
+        calibration["score_type"] == "isotonic-calibrated probability"
+    ].iloc[0]
+    if not np.isclose(float(calibrated_row["brier_score"]), np.mean((probs - y) ** 2), atol=1e-8, rtol=0):
+        fail("Calibrated test Brier score does not match test_scored.csv.")
+    if not np.isclose(float(calibrated_row["mean_predicted_probability"]), np.mean(probs), atol=1e-8, rtol=0):
+        fail("Mean calibrated probability does not match test_scored.csv.")
+    if not np.isclose(float(calibrated_row["observed_prevalence"]), np.mean(y), atol=1e-8, rtol=0):
+        fail("Observed default prevalence does not match test_scored.csv.")
 
     # G5: Thresholds must be in range and results must include the expected comparisons.
     if not threshold["optimal_threshold"].between(0, 1).all():
