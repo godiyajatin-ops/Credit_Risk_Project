@@ -29,6 +29,7 @@ REQUIRED = [
     "ablation_fold_diffs.csv",
     "fair_lending_ablation.csv",
     "shap_lr_rank_correlation.csv",
+    "thin_file_segments.csv",
     "shap_reason_codes.csv",
     "rank_correlation.txt",
 ]
@@ -125,6 +126,11 @@ def main() -> int:
         fail("fair_lending_ablation.csv lacks expected sensitivity columns.")
     if len(policy) != 2:
         fail("fair_lending_ablation.csv must contain configured and expanded feature policies.")
+
+    # The thin-file segment report is expected to have both presence/absence cohorts.
+    segments = pd.read_csv(RESULTS / "thin_file_segments.csv")
+    if len(segments) != 2 or segments["segment"].nunique() != 2:
+        fail("thin_file_segments.csv must report both bureau-history segments.")
 
     # Calibration sanity metric is diagnostic only, not a standalone acceptance criterion.
     prevalence = float(np.mean(y))
