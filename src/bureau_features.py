@@ -62,9 +62,8 @@ def build_bureau_features(data_dir: Path = DATA_DIR) -> pd.DataFrame:
 
     # 1. Data Cleaning
     df_bureau = df_bureau.drop_duplicates()
-    df_bureau["AMT_CREDIT_SUM"] = df_bureau["AMT_CREDIT_SUM"].fillna(0.0)
-    df_bureau["AMT_CREDIT_SUM_OVERDUE"] = df_bureau["AMT_CREDIT_SUM_OVERDUE"].fillna(0.0)
-    df_bureau["CREDIT_DAY_OVERDUE"] = df_bureau["CREDIT_DAY_OVERDUE"].fillna(0.0)
+    # Preserve unknown exposure/delinquency values as missing. Missing is not equivalent
+    # to confirmed zero debt or zero days overdue; only semantic count features are zero-filled downstream.
 
     # 2. Status Indicators
     df_bureau["IS_ACTIVE"] = (df_bureau["CREDIT_ACTIVE"] == "Active").astype("int32")
@@ -77,10 +76,10 @@ def build_bureau_features(data_dir: Path = DATA_DIR) -> pd.DataFrame:
         "IS_ACTIVE": "sum",
         "IS_CLOSED": "sum",
         "DAYS_CREDIT": ["mean", "max"],
-        "AMT_CREDIT_SUM": "sum",
+        "AMT_CREDIT_SUM": lambda values: values.sum(min_count=1),
         "AMT_CREDIT_SUM_DEBT": lambda values: values.sum(min_count=1),
         "CREDIT_DAY_OVERDUE": "max",
-        "AMT_CREDIT_SUM_OVERDUE": "sum",
+        "AMT_CREDIT_SUM_OVERDUE": lambda values: values.sum(min_count=1),
     }
 
     bureau_agg = df_bureau.groupby("SK_ID_CURR").agg(agg_dict)
@@ -185,7 +184,7 @@ def build_previous_app_features(data_dir: Path = DATA_DIR) -> pd.DataFrame:
 
     # Refusal rate
     prev_agg["PREV_REFUSAL_RATE"] = (
-        prev_agg["PREV_REFUSED_COUNT"] / (prev_agg["PREV_APP_COUNT"] + 1e-5)
+        prev_agg["PREV_REFUSED_COUNT"] / prev_agg["PREV_APP_COUNT"].where(prev_agg["PREV_APP_COUNT"] > 0)
     ).astype("float32")
 
     prev_agg["HAS_PREV"] = 1
