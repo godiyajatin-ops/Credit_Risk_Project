@@ -18,9 +18,9 @@ from sklearn.metrics import (
 )
 
 try:
-    from src.config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR
+    from src.config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR, LGD_BASE, NET_MARGIN_RATE
 except ImportError:
-    from config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR
+    from config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR, LGD_BASE, NET_MARGIN_RATE
 
 
 def calculate_risk_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> Dict[str, float]:
@@ -132,7 +132,7 @@ def bootstrap_test_evaluation(
     - Champion (Optimal t*) vs. Baseline v1 (t=0.5)
     - Champion (Optimal t*) vs. Runner-Up (t=0.5)
     """
-    np.random.seed(random_seed)
+    rng = np.random.default_rng(random_seed)
     n_samples = len(y_test)
     models = list(model_predictions.keys())
 
@@ -141,12 +141,13 @@ def bootstrap_test_evaluation(
     boot_pr = {m: np.zeros(n_bootstraps) for m in models}
     boot_cost = {m: np.zeros(n_bootstraps) for m in models}
 
-    for b in range(n_bootstraps):
-        boot_idx = np.random.randint(0, n_samples, size=n_samples)
+    b = 0
+    while b < n_bootstraps:
+        boot_idx = rng.integers(0, n_samples, size=n_samples)
         y_b = y_test[boot_idx]
         credit_b = amt_credit_test[boot_idx]
 
-        # Guard against zero-variance bootstrap samples
+        # Reject invalid resamples rather than leaving zero-valued CI entries.
         if len(np.unique(y_b)) < 2:
             continue
 
@@ -159,8 +160,9 @@ def bootstrap_test_evaluation(
             preds_b = (probs_b >= thresh).astype(int)
             fn_mask = (y_b == 1) & (preds_b == 0)
             fp_mask = (y_b == 0) & (preds_b == 1)
-            cost_total = np.sum(0.45 * credit_b[fn_mask]) + np.sum(0.09 * credit_b[fp_mask])
+            cost_total = np.sum(LGD_BASE * credit_b[fn_mask]) + np.sum(NET_MARGIN_RATE * credit_b[fp_mask])
             boot_cost[m][b] = cost_total / n_samples
+        b += 1
 
     # Aggregate 95% Confidence Intervals (Percentile Bootstrap: 2.5% to 97.5%)
     summary_list = []
