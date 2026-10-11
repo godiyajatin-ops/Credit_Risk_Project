@@ -75,7 +75,7 @@ Credit_Risk_Project/
 
 Models were trained on the 80% partition ($N = 246,008$) under **5-Fold Stratified Cross-Validation**. Because default prevalence is heavily imbalanced (**8.07% baseline rate**), **Precision-Recall AUC (PR-AUC)** was pre-committed as the primary decision metric, while ROC-AUC, Gini ($2 \times \text{ROC-AUC} - 1$), Kolmogorov-Smirnov (KS), and Brier Score served as secondary checks.
 
-$$\text{PR-AUC}_{\text{baseline}} = \text{Prevalence} = 0.0807$$
+$$\text{Baseline PR-AUC} = \text{Prevalence} = 0.0807$$
 
 *Scorecard verified from `results/cv_metrics.csv`:*
 
@@ -90,7 +90,7 @@ $$\text{PR-AUC}_{\text{baseline}} = \text{Prevalence} = 0.0807$$
 
 > **Champion Selection:** **XGBoost** earned Champion status by achieving the highest cross-validated PR-AUC (**0.2468**), generating a **+28.24% relative lift** over the 5-feature benchmark and a **+9.35% relative lift** over the full regularized Logistic Regression.
 
-![5-Fold OOF Precision-Recall & ROC Overlays](assets/pr_roc_overlay.png)
+![5-Fold OOF Precision-Recall & ROC Discrimination Overlays](assets/pr_roc_overlay.png)
 
 ---
 
@@ -108,10 +108,16 @@ Using an out-of-fold **Isotonic Regression** calibrator (`sklearn.isotonic.Isoto
 
 ### 2. Basel Loss Formulation & Cost Sensitivity Matrix
 Under **Basel Foundation-IRB (F-IRB)** standards:
-* **False Negative (Default Approved):** $\text{Loss}_{\text{FN}} = \text{LGD} \times \text{AMT\_CREDIT} = 0.45 \times \text{AMT\_CREDIT}$
-* **False Positive (Good Borrower Declined):** $\text{Loss}_{\text{FP}} = \text{Margin} \times \text{AMT\_CREDIT} = 0.09 \times \text{AMT\_CREDIT}$
-* **Cost Ratio ($r$):** $$r = \frac{\text{LGD}}{\text{Margin}} = \frac{0.45}{0.09} = 5.0$$
-* **Analytic Bayes Optimal Threshold ($t^*$):** $$t^* = \frac{1}{1 + r} = \frac{1}{1 + 5.0} \approx 0.1667 \ (16.67\%)$$
+* **False Negative (Default Approved):**
+  $$\text{Loss}_{\text{FN}} = \text{LGD} \times \text{Credit Amount} = 0.45 \times \text{Credit Amount}$$
+  *(where Credit Amount is `AMT_CREDIT`)*
+* **False Positive (Good Borrower Declined):**
+  $$\text{Loss}_{\text{FP}} = \text{Margin} \times \text{Credit Amount} = 0.09 \times \text{Credit Amount}$$
+  *(where Credit Amount is `AMT_CREDIT`)*
+* **Cost Ratio ($r$):**
+  $$r = \frac{\text{LGD}}{\text{Margin}} = \frac{0.45}{0.09} = 5.0$$
+* **Analytic Bayes Optimal Threshold ($t^*$):**
+  $$t^* = \frac{1}{1 + r} = \frac{1}{1 + 5.0} \approx 0.1667 \ (16.67\%)$$
 
 An empirical grid search ($0.01 \le t \le 0.99$, step $0.005$) over calibrated probabilities identified the empirical cost-minimizing threshold at **$t^* = 0.1600$**, matching theoretical expectations within 67 basis points.
 
