@@ -1,5 +1,5 @@
 """
-Institutional Credit Risk Modeling Framework (v2.1)
+Credit Risk Modeling Project
 Feature Engineering, Schema Governance, and Scikit-Learn Pipelines
 """
 
