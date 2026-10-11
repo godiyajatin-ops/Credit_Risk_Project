@@ -31,6 +31,7 @@ REQUIRED = [
     "ablation_fold_diffs.csv",
     "fair_lending_ablation.csv",
     "shap_lr_rank_correlation.csv",
+    "shap_lr_rank_correlation_robust.csv",
     "thin_file_segments.csv",
     "shap_reason_codes.csv",
     "rank_correlation.txt",
@@ -165,6 +166,9 @@ def main() -> int:
         fail("fair_lending_ablation.csv lacks expected sensitivity columns.")
     if len(policy) != 2:
         fail("fair_lending_ablation.csv must contain configured and expanded feature policies.")
+    rank_robust = pd.read_csv(RESULTS / "shap_lr_rank_correlation_robust.csv")
+    if len(rank_robust) < 10 or rank_robust["feature"].duplicated().any():
+        fail("Collinearity-robust rank table is too small or contains duplicate features.")
 
     # The thin-file segment report is expected to have both presence/absence cohorts.
     segments = pd.read_csv(RESULTS / "thin_file_segments.csv")
