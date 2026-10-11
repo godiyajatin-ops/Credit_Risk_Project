@@ -97,12 +97,27 @@ def main() -> int:
     credit = scored["amt_credit"].to_numpy(dtype=float)
     pred = scored["champ_pred_optimal"].to_numpy(dtype=int)
     probs = scored["champ_calib_prob"].to_numpy(dtype=float)
+    runner_pred = scored["runner_up_pred_optimal"].to_numpy(dtype=int)
+    runner_probs = scored["runner_up_calib_prob"].to_numpy(dtype=float)
     if not set(np.unique(y)).issubset({0, 1}):
         fail("Test target contains values other than 0/1.")
-    if not np.isfinite(credit).all() or not np.isfinite(probs).all():
+    if not np.isfinite(credit).all() or not np.isfinite(probs).all() or not np.isfinite(runner_probs).all():
         fail("Test credit amounts or calibrated probabilities contain non-finite values.")
-    if ((probs < 1e-4) | (probs > 1 - 1e-4)).any():
-        fail("Calibrated probabilities violate the configured floor/cap.")
+    probability_floor = float(manifest.get("probability_floor", 1e-4))
+    if ((probs < probability_floor) | (probs > 1 - probability_floor)).any():
+        fail("Champion calibrated probabilities violate the configured floor/cap.")
+    if ((runner_probs < probability_floor) | (runner_probs > 1 - probability_floor)).any():
+        fail("Runner-up calibrated probabilities violate the configured floor/cap.")
+    thresholds = manifest.get("selected_thresholds", {})
+    champion_threshold = float(thresholds.get("champion_oof_cost_optimal", np.nan))
+    runner_threshold = float(thresholds.get("runner_up_oof_cost_optimal", np.nan))
+    v1_threshold = float(thresholds.get("v1_oof_cost_optimal", np.nan))
+    if not all(np.isfinite(v) and 0 < v < 1 for v in [champion_threshold, runner_threshold, v1_threshold]):
+        fail("run_manifest.json is missing a valid selected threshold.")
+    if not np.array_equal(pred, (probs >= champion_threshold).astype(int)):
+        fail("Champion test predictions do not match the selected threshold.")
+    if not np.array_equal(runner_pred, (runner_probs >= runner_threshold).astype(int)):
+        fail("Runner-up test predictions do not match the selected threshold.")
 
     # G4: Recompute the champion's point estimate directly from scored rows.
     assumptions = manifest.get("decision_cost_assumptions", {})
@@ -117,6 +132,16 @@ def main() -> int:
         fail(f"headline_costs.csv must contain exactly one row for {champion_label!r}.")
     if not np.isclose(recomputed_cost, float(selected_costs.iloc[0]), atol=0.01, rtol=0):
         fail(f"Champion cost mismatch: scored={recomputed_cost:.4f}, headline={float(selected_costs.iloc[0]):.4f}.")
+
+    runner_fn = (y == 1) & (runner_pred == 0)
+    runner_fp = (y == 0) & (runner_pred == 1)
+    runner_recomputed_cost = float((lgd * credit[runner_fn].sum() + margin * credit[runner_fp].sum()) / len(y))
+    runner_label = f"Runner-up {manifest['runner_up']} (OOF-calibrated cost-optimal)"
+    runner_costs = costs.loc[costs["policy"] == runner_label, "cost_per_applicant"]
+    if len(runner_costs) != 1:
+        fail(f"headline_costs.csv must contain exactly one row for {runner_label!r}.")
+    if not np.isclose(runner_recomputed_cost, float(runner_costs.iloc[0]), atol=0.01, rtol=0):
+        fail(f"Runner-up cost mismatch: scored={runner_recomputed_cost:.4f}, headline={float(runner_costs.iloc[0]):.4f}.")
 
     # Calibration statistics must be generated from the same locked test scores.
     calibration = pd.read_csv(RESULTS / "test_calibration.csv")
