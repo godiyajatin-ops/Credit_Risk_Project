@@ -1,0 +1,10 @@
+applicant_cohort,calibrated_prob,underwriting_action,risk_factor_rank,feature_name,feature_value,shap_attribution,adverse_action_notice
+High-Risk (Decline),0.6897,Decline,1,EXT_SOURCE_MEAN,0.0314,1.194,Composite multi-agency credit bureau score below underwriting standard
+High-Risk (Decline),0.6897,Decline,2,EXT_SOURCE_3,0.0565,0.6552,Low rating in External Credit Bureau Score 3
+High-Risk (Decline),0.6897,Decline,3,EXT_SOURCE_2,0.0063,0.4752,Low rating in External Credit Bureau Score 2
+Borderline Marginal (Decline),0.157,Approve,1,EXT_SOURCE_MEAN,0.17,0.9036,Composite multi-agency credit bureau score below underwriting standard
+Borderline Marginal (Decline),0.157,Approve,2,CREDIT_TERM,0.0582,0.2361,Loan payment-to-credit term structure indicates elevated amortization burden
+Borderline Marginal (Decline),0.157,Approve,3,EXT_SOURCE_2,0.17,0.106,Low rating in External Credit Bureau Score 2
+Low-Risk Prime (Approve),0.0,Approve,1,AMT_ANNUITY,43839.0,0.0778,High monthly annuity amount relative to liquid reserves
+Low-Risk Prime (Approve),0.0,Approve,2,ORGANIZATION_TYPE,5.0,0.072,Adverse risk contribution from attribute: ORGANIZATION_TYPE
+Low-Risk Prime (Approve),0.0,Approve,3,AMT_GOODS_PRICE,450000.0,0.0617,Adverse risk contribution from attribute: AMT_GOODS_PRICE

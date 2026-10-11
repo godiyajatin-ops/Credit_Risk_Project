@@ -1,0 +1,3 @@
+Spearman rank correlation: 0.4772
+p-value: 1.0116e-06
+Evaluated continuous attributes: 95
