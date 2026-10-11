@@ -1,6 +1,6 @@
 """
-Institutional Credit Risk Modeling Framework (v2.1)
-Evaluation Harness: 5-Fold Stratified CV, OOF Generation, and Risk Metrics
+Credit Risk Modeling Project
+Cross-validation, out-of-fold predictions, and paired bootstrap evaluation
 """
 
 import time
@@ -126,11 +126,9 @@ def bootstrap_test_evaluation(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Executes 1,000 paired bootstrap iterations on the holdout test set to construct 95% Confidence
-    Intervals for ROC-AUC, PR-AUC, and Expected Cost per applicant.
+    Intervals for ROC-AUC, PR-AUC, and Expected decision cost per applicant.
 
-    Also computes paired difference CIs for:
-    - Champion (Optimal t*) vs. Baseline v1 (t=0.5)
-    - Champion (Optimal t*) vs. Runner-Up (t=0.5)
+    Also computes paired difference CIs versus approve-all and two baseline policies.
     """
     rng = np.random.default_rng(random_seed)
     n_samples = len(y_test)
