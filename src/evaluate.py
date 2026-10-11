@@ -1,6 +1,6 @@
 """
-Institutional Credit Risk Modeling Framework (v2.1)
-Evaluation Harness: 5-Fold Stratified CV, OOF Generation, and Risk Metrics
+Credit Risk Modeling Project
+Cross-validation, out-of-fold predictions, and paired bootstrap evaluation
 """
 
 import time
@@ -18,14 +18,14 @@ from sklearn.metrics import (
 )
 
 try:
-    from src.config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR
+    from src.config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR, LGD_BASE, NET_MARGIN_RATE
 except ImportError:
-    from config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR
+    from config import RANDOM_SEED, CV_FOLDS, RESULTS_DIR, LGD_BASE, NET_MARGIN_RATE
 
 
 def calculate_risk_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> Dict[str, float]:
     """
-    Calculates comprehensive institutional credit scoring metrics:
+    Calculates classification and ranking metrics for the credit-risk experiment:
     - ROC-AUC: Global class separation capability
     - PR-AUC: Average Precision (Primary metric under ~8% class imbalance)
     - Gini Coefficient: 2 * ROC-AUC - 1 (Standard banking discrimination metric)
@@ -55,6 +55,29 @@ def calculate_risk_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> Dict[str, 
     }
 
 
+def _apply_fold_specific_class_weight(estimator: Any, y_train: np.ndarray) -> Any:
+    """Recompute boosted-tree scale_pos_weight from the current CV training fold only."""
+    if not hasattr(estimator, "get_params") or not hasattr(estimator, "set_params"):
+        return estimator
+
+    params = estimator.get_params(deep=True)
+    weight_keys = [
+        key for key, value in params.items()
+        if key.endswith("scale_pos_weight") and value is not None and float(value) > 1.0
+    ]
+    if not weight_keys:
+        return estimator
+
+    positives = int(np.sum(np.asarray(y_train) == 1))
+    negatives = int(np.sum(np.asarray(y_train) == 0))
+    if positives == 0:
+        raise ValueError("Cannot compute fold-specific class weight without positive examples.")
+
+    fold_ratio = negatives / positives
+    estimator.set_params(**{key: fold_ratio for key in weight_keys})
+    return estimator
+
+
 def cv_oof_evaluate(
     model_name: str,
     pipeline_factory: Callable[[], Any],
@@ -67,7 +90,7 @@ def cv_oof_evaluate(
     Executes a strict 5-Fold Stratified Cross-Validation on the training partition:
     - Instantiates a clean pipeline per fold to guarantee zero data leakage.
     - Captures out-of-fold (OOF) default probability predictions.
-    - Saves out-of-fold array to results/oof_<model_name>.npy for Phase P3 calibration.
+    - Saves out-of-fold predictions to results/oof_<model_name>.npy for calibration and threshold selection.
     - Returns OOF predictions, overall scorecard, and fold-level metrics table.
     """
     skf = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_SEED)
@@ -89,6 +112,9 @@ def cv_oof_evaluate(
 
         # Fresh estimator instance per fold
         estimator = pipeline_factory()
+        # Weighted gradient-boosted models get their imbalance ratio from this
+        # fold's training labels only, never from the held-out fold.
+        estimator = _apply_fold_specific_class_weight(estimator, y_tr)
         estimator.fit(X_tr, y_tr)
 
         # Predict probability of default (Class 1)
@@ -126,13 +152,11 @@ def bootstrap_test_evaluation(
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Executes 1,000 paired bootstrap iterations on the holdout test set to construct 95% Confidence
-    Intervals for ROC-AUC, PR-AUC, and Expected Cost per applicant.
+    Intervals for ROC-AUC, PR-AUC, and Expected decision cost per applicant.
 
-    Also computes paired difference CIs for:
-    - Champion (Optimal t*) vs. Baseline v1 (t=0.5)
-    - Champion (Optimal t*) vs. Runner-Up (t=0.5)
+    Also computes paired difference CIs versus approve-all and two baseline policies.
     """
-    np.random.seed(random_seed)
+    rng = np.random.default_rng(random_seed)
     n_samples = len(y_test)
     models = list(model_predictions.keys())
 
@@ -141,12 +165,13 @@ def bootstrap_test_evaluation(
     boot_pr = {m: np.zeros(n_bootstraps) for m in models}
     boot_cost = {m: np.zeros(n_bootstraps) for m in models}
 
-    for b in range(n_bootstraps):
-        boot_idx = np.random.randint(0, n_samples, size=n_samples)
+    b = 0
+    while b < n_bootstraps:
+        boot_idx = rng.integers(0, n_samples, size=n_samples)
         y_b = y_test[boot_idx]
         credit_b = amt_credit_test[boot_idx]
 
-        # Guard against zero-variance bootstrap samples
+        # Reject invalid resamples rather than leaving zero-valued CI entries.
         if len(np.unique(y_b)) < 2:
             continue
 
@@ -159,8 +184,9 @@ def bootstrap_test_evaluation(
             preds_b = (probs_b >= thresh).astype(int)
             fn_mask = (y_b == 1) & (preds_b == 0)
             fp_mask = (y_b == 0) & (preds_b == 1)
-            cost_total = np.sum(0.45 * credit_b[fn_mask]) + np.sum(0.09 * credit_b[fp_mask])
+            cost_total = np.sum(LGD_BASE * credit_b[fn_mask]) + np.sum(NET_MARGIN_RATE * credit_b[fp_mask])
             boot_cost[m][b] = cost_total / n_samples
+        b += 1
 
     # Aggregate 95% Confidence Intervals (Percentile Bootstrap: 2.5% to 97.5%)
     summary_list = []
@@ -180,22 +206,28 @@ def bootstrap_test_evaluation(
 
     df_ci_summary = pd.DataFrame(summary_list)
 
-    # Paired Differences: Delta = (Baseline - Champion) -> Positive value means Champion saves money
-    diff_records = []
+    # Paired differences on the exact same valid bootstrap resamples.
     champ_key = "Champion (cost-optimal t*)"
-    v1_key = "Baseline v1 (5-feature LR)"
-
-    if champ_key in models and v1_key in models:
-        cost_diff_v1 = boot_cost[v1_key] - boot_cost[champ_key]
+    comparison_pairs = [
+        (champ_key, "Baseline v1 (5-feature LR)", "Champion vs v1 at threshold 0.50"),
+        (champ_key, "Approve everyone", "Champion vs approve-all"),
+        (champ_key, "Baseline v1 (OOF-calibrated cost-optimal t*)", "Champion vs v1 own cost-optimal threshold"),
+        (champ_key, "Runner-up (cost-optimal t*)", "Champion vs runner-up"),
+    ]
+    diff_records = []
+    for better, reference, label in comparison_pairs:
+        if better not in models or reference not in models:
+            continue
+        cost_saving = boot_cost[reference] - boot_cost[better]
+        pr_lift = boot_pr[better] - boot_pr[reference]
         diff_records.append({
-            "comparison": "Champion (t*) vs Baseline v1",
-            "cost_saving_mean": np.mean(cost_diff_v1),
-            "cost_saving_ci_lower": np.percentile(cost_diff_v1, 2.5),
-            "cost_saving_ci_upper": np.percentile(cost_diff_v1, 97.5),
-            "pr_auc_lift_mean": np.mean(boot_pr[champ_key] - boot_pr[v1_key]),
-            "pr_auc_lift_ci_lower": np.percentile(boot_pr[champ_key] - boot_pr[v1_key], 2.5),
-            "pr_auc_lift_ci_upper": np.percentile(boot_pr[champ_key] - boot_pr[v1_key], 97.5),
+            "comparison": label,
+            "cost_saving_mean": float(np.mean(cost_saving)),
+            "cost_saving_ci_lower": float(np.percentile(cost_saving, 2.5)),
+            "cost_saving_ci_upper": float(np.percentile(cost_saving, 97.5)),
+            "pr_auc_lift_mean": float(np.mean(pr_lift)),
+            "pr_auc_lift_ci_lower": float(np.percentile(pr_lift, 2.5)),
+            "pr_auc_lift_ci_upper": float(np.percentile(pr_lift, 97.5)),
         })
-
     df_diff_summary = pd.DataFrame(diff_records)
     return df_ci_summary, df_diff_summary

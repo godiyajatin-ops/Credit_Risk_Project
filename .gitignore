@@ -7,6 +7,7 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Virtual Environments
+.venv/
 venv/
 env/
 ENV/
@@ -22,3 +23,6 @@ data/processed/*.csv
 # OS Generated Files
 .DS_Store
 Thumbs.db
+
+# Local comparison copies and run scratch data
+results_prev/

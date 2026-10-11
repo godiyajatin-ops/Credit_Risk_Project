@@ -17,9 +17,9 @@ SELECT
     target,
     amt_credit,
     amt_income_total,
-    ROUND((amt_credit / NULLIF(amt_income_total, 0)), 4) AS fe_loan_to_income_ratio,
-    ROUND(ABS(days_birth) / 365.25, 2) AS fe_age_years,
-    ROUND(ABS(CASE WHEN days_employed = 365243 THEN NULL ELSE days_employed END) / 365.25, 2) AS fe_years_employed
+    ROUND((amt_credit::NUMERIC / NULLIF(amt_income_total::NUMERIC, 0)), 4) AS fe_loan_to_income_ratio,
+    ROUND(ABS(days_birth::NUMERIC) / 365.25, 2) AS fe_age_years,
+    ROUND(ABS((CASE WHEN days_employed = 365243 THEN NULL ELSE days_employed END)::NUMERIC) / 365.25, 2) AS fe_years_employed
 FROM public.credit_risk_data;
 
 
@@ -48,7 +48,7 @@ WITH age_cohorts AS (
         COUNT(*) AS total_population,
         SUM(target) AS total_defaults,
         AVG(target) AS group_default_rate
-    FROM public.credit_risk_data
+    FROM analytics.v_credit_risk_engineered
     WHERE fe_age_years IS NOT NULL
     GROUP BY bucket_id
 )
@@ -115,11 +115,11 @@ WITH risk_summary AS (
         target,
         AVG(amt_credit) AS avg_credit_amount,
         AVG(fe_loan_to_income_ratio) AS avg_lti_ratio
-    FROM public.credit_risk_data
+    FROM analytics.v_credit_risk_engineered
     GROUP BY target
 )
 SELECT 
     CASE WHEN target = 1 THEN 'Defaulters' ELSE 'Repaid' END AS borrower_status,
-    ROUND(avg_credit_amount, 2) AS avg_loan_size,
+    ROUND(avg_credit_amount::NUMERIC, 2) AS avg_loan_size,
     ROUND(avg_lti_ratio::NUMERIC, 2) AS avg_loan_to_income_ratio
 FROM risk_summary;

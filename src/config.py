@@ -1,5 +1,5 @@
 """
-Institutional Credit Risk Modeling Framework (v2.1)
+Credit Risk Modeling Project Configuration
 Global Configuration, Architectural Constants, and Paths
 """
 
@@ -34,13 +34,13 @@ ID_COL = "SK_ID_CURR"
 PROTECTED_ATTRIBUTE = "CODE_GENDER"
 
 # -----------------------------------------------------------------------------
-# Frozen v1 Benchmark Metadata (Phase P0 Locked)
+# Frozen v1 benchmark metadata
 # -----------------------------------------------------------------------------
 V1_BASELINE_METRICS = {
     "roc_auc": 0.7154,
     "recall": 0.6373,
     "precision": 0.1472,
-    "accuracy": 0.6821,
+    "accuracy": 0.6726,
     "f1": 0.2392,
 }
 
@@ -53,7 +53,7 @@ V1_CORE_FEATURES = [
 ]
 
 # -----------------------------------------------------------------------------
-# Regulatory & Schema Governance Constants
+# Feature policy and schema constants
 # -----------------------------------------------------------------------------
 # 17 columns with >60% missing values in application_train.csv
 HIGH_NULL_COLS_60 = [
@@ -85,10 +85,18 @@ EDUCATION_ORDINAL_MAP = {
 }
 
 # -----------------------------------------------------------------------------
-# Basel Foundation-IRB Economic Parameters
+# Illustrative decision-cost assumptions
 # -----------------------------------------------------------------------------
-LGD_BASE = 0.45          # Senior Unsecured Loss Given Default
-NET_MARGIN_RATE = 0.09   # Opportunity cost of false rejection
-COST_RATIO_DEFAULT = 5.0 # r = LGD / Margin = 0.45 / 0.09 = 5.0
+LGD_BASE = 0.45          # Illustrative loss given default assumption
+NET_MARGIN_RATE = 0.09   # Illustrative opportunity cost of false rejection
+COST_RATIO_DEFAULT = 5.0 # ratio implied by the illustrative assumptions
+PROB_FLOOR = 1e-4
+FAIR_LENDING_DROP_COLS = [
+    "CODE_GENDER",
+    "NAME_FAMILY_STATUS",
+    "NAME_TYPE_SUITE",
+    "CNT_CHILDREN",
+    "CNT_FAM_MEMBERS",
+]
 COST_SENSITIVITY_RATIOS = [2.0, 3.0, 5.0, 10.0, 20.0]
 
