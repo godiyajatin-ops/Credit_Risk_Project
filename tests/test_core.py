@@ -2,11 +2,29 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.base import BaseEstimator
+from sklearn.pipeline import Pipeline
 
 from src.bureau_features import build_bureau_features, build_previous_app_features
 from src.costs import calibrate_probabilities_isotonic, compute_credit_cost
-from src.evaluate import bootstrap_test_evaluation
+from src.evaluate import bootstrap_test_evaluation, _apply_fold_specific_class_weight
 from src.features import build_features
+
+
+class DummyWeightedEstimator(BaseEstimator):
+    def __init__(self, scale_pos_weight=11.39):
+        self.scale_pos_weight = scale_pos_weight
+
+
+def test_boosted_class_weight_is_computed_from_cv_training_fold_only():
+    weighted = Pipeline([("classifier", DummyWeightedEstimator(scale_pos_weight=11.39))])
+    y_fold = np.array([0] * 8 + [1] * 2)
+    _apply_fold_specific_class_weight(weighted, y_fold)
+    assert np.isclose(weighted.get_params()["classifier__scale_pos_weight"], 4.0)
+
+    unweighted = Pipeline([("classifier", DummyWeightedEstimator(scale_pos_weight=1.0))])
+    _apply_fold_specific_class_weight(unweighted, y_fold)
+    assert np.isclose(unweighted.get_params()["classifier__scale_pos_weight"], 1.0)
 
 
 def test_feature_policy_drops_configured_sensitive_and_proxy_columns():
