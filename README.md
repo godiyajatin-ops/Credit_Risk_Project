@@ -106,7 +106,8 @@ The updated notebook writes machine-readable outputs instead of requiring values
 - `results/imbalance_study.csv`: the tested class-imbalance configurations.
 - `results/ablation_study.csv` and `results/ablation_fold_diffs.csv`: relational feature-store comparison and fold-level changes.
 - `results/fair_lending_ablation.csv`: predictive sensitivity to the configured feature exclusions; not a fairness assessment.
-- `results/shap_lr_rank_correlation.csv` and `results/shap_reason_codes.csv`: descriptive model-explanation artifacts. The latter contains illustrative risk drivers, not legal notices.
+- `results/shap_lr_rank_correlation.csv` and `results/shap_lr_rank_correlation_robust.csv`: descriptive comparison of linear coefficients and tree SHAP rankings, including a sensitivity check that keeps one representative per `_AVG`/`_MODE`/`_MEDI` group.
+- `results/shap_reason_codes.csv`: illustrative risk-driver descriptions, not legal notices.
 - `results/run_manifest.json`: champion, data split, feature counts, assumptions, and environment versions.
 - `results/thin_file_segments.csv`: holdout metrics by whether an applicant has linked bureau history; descriptive only.
 
