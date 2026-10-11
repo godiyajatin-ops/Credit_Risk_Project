@@ -111,20 +111,23 @@ def test_relational_aggregates_preserve_missing_debt_and_only_average_approved_a
     raw_dir.mkdir()
     pd.DataFrame(
         {
-            "SK_ID_CURR": [1, 1, 2],
-            "SK_ID_BUREAU": [11, 12, 21],
-            "CREDIT_ACTIVE": ["Active", "Closed", "Active"],
-            "DAYS_CREDIT": [-100.0, -300.0, -40.0],
-            "CREDIT_DAY_OVERDUE": [0.0, 5.0, 0.0],
-            "AMT_CREDIT_SUM": [1000.0, 2000.0, 0.0],
-            "AMT_CREDIT_SUM_DEBT": [np.nan, np.nan, np.nan],
-            "AMT_CREDIT_SUM_OVERDUE": [0.0, 50.0, 0.0],
+            "SK_ID_CURR": [1, 1, 2, 3],
+            "SK_ID_BUREAU": [11, 12, 21, 31],
+            "CREDIT_ACTIVE": ["Active", "Closed", "Active", "Active"],
+            "DAYS_CREDIT": [-100.0, -300.0, -40.0, -10.0],
+            "CREDIT_DAY_OVERDUE": [0.0, 5.0, 0.0, np.nan],
+            "AMT_CREDIT_SUM": [1000.0, 2000.0, 0.0, np.nan],
+            "AMT_CREDIT_SUM_DEBT": [np.nan, np.nan, np.nan, np.nan],
+            "AMT_CREDIT_SUM_OVERDUE": [0.0, 50.0, 0.0, np.nan],
         }
     ).to_csv(raw_dir / "bureau.csv", index=False)
     bureau = build_bureau_features(tmp_path).set_index("SK_ID_CURR")
     assert np.isnan(bureau.loc[1, "BUREAU_AMT_CREDIT_SUM_DEBT"])
     assert np.isnan(bureau.loc[1, "BUREAU_DEBT_CREDIT_RATIO"])
     assert np.isnan(bureau.loc[2, "BUREAU_DEBT_CREDIT_RATIO"])
+    assert np.isnan(bureau.loc[3, "BUREAU_AMT_CREDIT_SUM"])
+    assert np.isnan(bureau.loc[3, "BUREAU_AMT_CREDIT_SUM_OVERDUE"])
+    assert np.isnan(bureau.loc[3, "BUREAU_CREDIT_DAY_OVERDUE_MAX"])
 
     pd.DataFrame(
         {
