@@ -138,7 +138,26 @@ def main() -> int:
     if not np.isclose(float(calibrated_row["observed_prevalence"]), np.mean(y), atol=1e-8, rtol=0):
         fail("Observed default prevalence does not match test_scored.csv.")
 
-    # G5: Thresholds must be in range and results must include the expected comparisons.
+    # G5: The champion's loss-weighted imbalance run must agree with the r=5 threshold table.
+    imbalance = pd.read_csv(RESULTS / "imbalance_study.csv")
+    loss_weighted = imbalance.loc[imbalance["strategy"].astype(str).str.startswith("Loss")]
+    threshold_r5 = threshold.loc[np.isclose(threshold["cost_ratio_r"], 5.0)]
+    if len(loss_weighted) != 1 or len(threshold_r5) != 1:
+        fail("Expected one loss-weighted champion row and one r=5 threshold row.")
+    if not np.isclose(
+        float(loss_weighted.iloc[0]["cost_per_applicant"]),
+        float(threshold_r5.iloc[0]["cost_per_applicant"]),
+        atol=0.02, rtol=0,
+    ):
+        fail("Loss-weighted champion cost does not match the r=5 threshold table.")
+    if not np.isclose(
+        float(loss_weighted.iloc[0]["optimal_threshold"]),
+        float(threshold_r5.iloc[0]["optimal_threshold"]),
+        atol=0.0051, rtol=0,
+    ):
+        fail("Loss-weighted champion threshold does not match the r=5 threshold table.")
+
+    # G6: Thresholds must be in range and results must include the expected comparisons.
     if not threshold["optimal_threshold"].between(0, 1).all():
         fail("threshold_table.csv contains an out-of-range threshold.")
     expected_comparisons = {
