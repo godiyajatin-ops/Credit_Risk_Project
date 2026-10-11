@@ -86,6 +86,7 @@ def test_bootstrap_rejects_one_class_resamples_and_returns_finite_intervals():
         "Baseline v1 (5-feature LR)": (p_base, 0.5),
         "Baseline v1 (OOF-calibrated cost-optimal t*)": (p_base, 0.45),
         "Champion (cost-optimal t*)": (p_champ, 0.3),
+        "Runner-up (cost-optimal t*)": (p_base, 0.4),
     }
     summary, diffs = bootstrap_test_evaluation(
         y_test=y,
@@ -99,6 +100,7 @@ def test_bootstrap_rejects_one_class_resamples_and_returns_finite_intervals():
         "Champion vs v1 at threshold 0.50",
         "Champion vs approve-all",
         "Champion vs v1 own cost-optimal threshold",
+        "Champion vs runner-up",
     }.issubset(set(diffs["comparison"]))
     assert np.isfinite(summary.select_dtypes(include=[np.number]).to_numpy()).all()
     assert np.isfinite(diffs.select_dtypes(include=[np.number]).to_numpy()).all()
