@@ -35,6 +35,7 @@ Credit_Risk_Project/
 │   ├── evaluate.py                      # Cross-validation and bootstrap evaluation
 │   └── bureau_features.py               # Bureau/history aggregations
 ├── results/                             # Generated CSV/NPY tables and run manifest
+├── scripts/verify_results.py            # Result-integrity checks after a clean rerun
 ├── assets/                              # Generated evaluation and SHAP figures
 ├── sql/                                 # PostgreSQL analytical artifacts
 ├── dashboards/                          # Power BI dashboard (if included locally)
@@ -101,6 +102,7 @@ The updated notebook writes machine-readable outputs instead of requiring values
 - `results/fair_lending_ablation.csv`: predictive sensitivity to the configured feature exclusions; not a fairness assessment.
 - `results/shap_lr_rank_correlation.csv` and `results/shap_reason_codes.csv`: descriptive model-explanation artifacts. The latter contains illustrative risk drivers, not legal notices.
 - `results/run_manifest.json`: champion, data split, feature counts, assumptions, and environment versions.
+- `results/thin_file_segments.csv`: holdout metrics by whether an applicant has linked bureau history; descriptive only.
 
 After rerunning, interpret PR-AUC relative to default prevalence and include uncertainty when comparing models. A small difference between XGBoost and LightGBM should be reported as a tie when the evidence does not support a meaningful distinction. Do not present a model's ranking lift as proof of causal structure, regulatory compliance, or deployment readiness.
 
