@@ -186,6 +186,7 @@ def bootstrap_test_evaluation(
         (champ_key, "Baseline v1 (5-feature LR)", "Champion vs v1 at threshold 0.50"),
         (champ_key, "Approve everyone", "Champion vs approve-all"),
         (champ_key, "Baseline v1 (OOF-calibrated cost-optimal t*)", "Champion vs v1 own cost-optimal threshold"),
+        (champ_key, "Runner-up (cost-optimal t*)", "Champion vs runner-up"),
     ]
     diff_records = []
     for better, reference, label in comparison_pairs:
