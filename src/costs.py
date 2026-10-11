@@ -1,6 +1,6 @@
 """
-Institutional Credit Risk Modeling Framework (v2.1)
-Cost Optimization Engine: Isotonic Calibration, Basel Loss Functions, and Threshold Search
+Credit Risk Modeling Project
+Cross-fitted probability calibration and illustrative expected decision cost
 """
 
 from typing import Dict, Tuple, List, Any
@@ -85,7 +85,7 @@ def compute_credit_cost(
     margin: float = NET_MARGIN_RATE,
 ) -> Dict[str, float]:
     """
-    Computes total portfolio dollar cost, cost per applicant, and relative cost vs 'Approve Everyone'.
+    Computes total illustrative decision cost, cost per applicant, and relative cost versus approving everyone.
 
     Decision Rule:
     - Approve if y_prob < threshold (Predicted Non-Default, Class 0)
@@ -106,7 +106,7 @@ def compute_credit_cost(
     cost_fp = float(np.sum(margin * amt_credit[fp_mask]))
     total_cost = cost_fn + cost_fp
 
-    # Baseline: Cost of Approving Everyone (Threshold = 1.0)
+    # Baseline: cost of approving everyone, computed from all observed defaults
     approve_all_fn_mask = (y_true == 1)
     cost_approve_all = float(np.sum(lgd * amt_credit[approve_all_fn_mask]))
 
