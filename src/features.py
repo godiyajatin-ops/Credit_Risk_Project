@@ -13,6 +13,7 @@ from sklearn.impute import SimpleImputer
 
 try:
     from src.config import (
+        FAIR_LENDING_DROP_COLS,
         TARGET_COL,
         ID_COL,
         PROTECTED_ATTRIBUTE,
@@ -21,6 +22,7 @@ try:
     )
 except ImportError:
     from config import (
+        FAIR_LENDING_DROP_COLS,
         TARGET_COL,
         ID_COL,
         PROTECTED_ATTRIBUTE,
@@ -29,13 +31,15 @@ except ImportError:
     )
 
 
-def build_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, Optional[pd.Series]]:
+def build_features(
+    df: pd.DataFrame, drop_fair_lending: bool = True
+) -> Tuple[pd.DataFrame, Optional[pd.Series]]:
     """
-    Executes production-grade feature transformations on the raw loan application schema.
+    Executes feature transformations on the raw loan application schema.
 
     Transformations:
     1. Extracts target vector if present.
-    2. Drops identifiers (SK_ID_CURR) and protected demographic attributes (CODE_GENDER).
+    2. Drops identifiers and, by default, the configured sensitive/proxy feature set. This does not establish legal compliance.
     3. Prunes 17 high-missingness (>60% null) architectural features.
     4. Handles DAYS_EMPLOYED anomaly (365243 -> EMPLOYED_ANOM flag).
     5. Derives debt-burden ratios, loan terms, and composite bureau aggregates.
@@ -50,12 +54,10 @@ def build_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, Optional[pd.Series]]
         y = data[TARGET_COL].copy()
         data = data.drop(columns=[TARGET_COL])
 
-    # 2. Fair Lending (Reg B) and Identifier Pruning
-    cols_to_drop = []
-    if ID_COL in data.columns:
-        cols_to_drop.append(ID_COL)
-    if PROTECTED_ATTRIBUTE in data.columns:
-        cols_to_drop.append(PROTECTED_ATTRIBUTE)
+    # 2. Illustrative feature policy. This is not a legal compliance determination.
+    cols_to_drop = [ID_COL]
+    policy_drop = FAIR_LENDING_DROP_COLS if drop_fair_lending else [PROTECTED_ATTRIBUTE]
+    cols_to_drop.extend(policy_drop)
 
     # 3. High-Missingness Pruning (>60% Nulls)
     cols_to_drop.extend([col for col in HIGH_NULL_COLS_60 if col in data.columns])
