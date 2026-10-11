@@ -1,3 +1,6 @@
-Spearman rank correlation: 0.4772
-p-value: 1.0116e-06
-Evaluated continuous attributes: 95
+Spearman rank correlation (all shared numeric features): 0.5004
+p-value (all shared numeric features): 3.2594e-07
+Evaluated shared numeric features: 93
+Spearman rank correlation (one representative per AVG/MODE/MEDI triplet): 0.6121
+p-value (triplet-reduced set): 5.4005e-09
+Evaluated features after triplet reduction: 75

@@ -1,0 +1,5 @@
+score_type,brier_score,mean_predicted_probability,observed_prevalence,n_unique_scores,n_exact_zeros,n_exact_ones
+xgboost: raw model score (not calibrated),0.18171773850917816,0.3878517746925354,0.08072776937710356,61412,0,0
+xgboost: isotonic-calibrated probability,0.06712405531450968,0.0817516806736239,0.08072776937710356,126,0,0
+lightgbm: raw model score (not calibrated),0.1784717611906634,0.3806743748254431,0.08072776937710356,61503,0,0
+lightgbm: isotonic-calibrated probability,0.0672119153840128,0.082425170925922,0.08072776937710356,124,0,0

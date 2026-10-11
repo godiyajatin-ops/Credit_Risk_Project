@@ -1,0 +1,51 @@
+{
+  "champion": "xgboost",
+  "runner_up": "lightgbm",
+  "random_seed": 42,
+  "test_size": 0.2,
+  "train_rows": 246008,
+  "test_rows": 61503,
+  "target_prevalence_train": 0.08072908198107379,
+  "target_prevalence_test": 0.08072776937710356,
+  "feature_counts": {
+    "application_only": 104,
+    "application_plus_bureau": 115,
+    "application_plus_previous": 113,
+    "full_relational_store": 124
+  },
+  "selected_thresholds": {
+    "champion_oof_cost_optimal": 0.16499999999999998,
+    "runner_up_oof_cost_optimal": 0.15999999999999998,
+    "v1_oof_cost_optimal": 0.175,
+    "raw_weighted_score_reference": 0.5
+  },
+  "probability_floor": 0.0001,
+  "cv_folds": 5,
+  "feature_policy_exclusions": [
+    "CODE_GENDER",
+    "NAME_FAMILY_STATUS",
+    "NAME_TYPE_SUITE",
+    "CNT_CHILDREN",
+    "CNT_FAM_MEMBERS"
+  ],
+  "decision_cost_assumptions": {
+    "lgd_reference_assumption": 0.45,
+    "rejection_opportunity_cost_assumption": 0.09,
+    "cost_ratio": 5.0,
+    "currency": "dataset currency units; no currency symbol implied"
+  },
+  "fair_lending_policy": "Illustrative feature exclusions; no legal compliance or fairness conclusion",
+  "hyperparameter_tuning": "Not performed; fixed configuration",
+  "dataset": "Home Credit Default Risk; single dataset and split",
+  "python_version": "3.14.7",
+  "package_versions": {
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "scikit-learn": "1.9.0",
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0",
+    "shap": "0.53.0",
+    "imbalanced-learn": "0.14.2",
+    "scipy": "1.18.0"
+  }
+}
