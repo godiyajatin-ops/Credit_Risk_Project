@@ -55,6 +55,29 @@ def calculate_risk_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> Dict[str, 
     }
 
 
+def _apply_fold_specific_class_weight(estimator: Any, y_train: np.ndarray) -> Any:
+    """Recompute boosted-tree scale_pos_weight from the current CV training fold only."""
+    if not hasattr(estimator, "get_params") or not hasattr(estimator, "set_params"):
+        return estimator
+
+    params = estimator.get_params(deep=True)
+    weight_keys = [
+        key for key, value in params.items()
+        if key.endswith("scale_pos_weight") and value is not None and float(value) > 1.0
+    ]
+    if not weight_keys:
+        return estimator
+
+    positives = int(np.sum(np.asarray(y_train) == 1))
+    negatives = int(np.sum(np.asarray(y_train) == 0))
+    if positives == 0:
+        raise ValueError("Cannot compute fold-specific class weight without positive examples.")
+
+    fold_ratio = negatives / positives
+    estimator.set_params(**{key: fold_ratio for key in weight_keys})
+    return estimator
+
+
 def cv_oof_evaluate(
     model_name: str,
     pipeline_factory: Callable[[], Any],
@@ -89,6 +112,9 @@ def cv_oof_evaluate(
 
         # Fresh estimator instance per fold
         estimator = pipeline_factory()
+        # Weighted gradient-boosted models get their imbalance ratio from this
+        # fold's training labels only, never from the held-out fold.
+        estimator = _apply_fold_specific_class_weight(estimator, y_tr)
         estimator.fit(X_tr, y_tr)
 
         # Predict probability of default (Class 1)
