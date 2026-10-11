@@ -22,6 +22,7 @@ REQUIRED = [
     "test_metrics.csv",
     "test_calibration.csv",
     "test_paired_diffs.csv",
+    "champion_runnerup_fold_diffs.csv",
     "test_operating_points.csv",
     "headline_costs.csv",
     "test_scored.csv",
@@ -88,7 +89,7 @@ def main() -> int:
     # G3: Holdout table matches manifest and holds valid model scores.
     if len(scored) != int(manifest.get("test_rows", -1)):
         fail("test_scored.csv row count does not match run_manifest.")
-    for col in ["y_true", "amt_credit", "v1_prob", "champ_raw_prob", "champ_calib_prob", "champ_pred_optimal"]:
+    for col in ["y_true", "amt_credit", "v1_prob", "champ_raw_prob", "champ_calib_prob", "champ_pred_optimal", "runner_up_raw_prob", "runner_up_calib_prob", "runner_up_pred_optimal"]:
         if col not in scored:
             fail(f"test_scored.csv missing required column: {col}")
     y = scored["y_true"].to_numpy(dtype=int)
@@ -118,12 +119,16 @@ def main() -> int:
 
     # Calibration statistics must be generated from the same locked test scores.
     calibration = pd.read_csv(RESULTS / "test_calibration.csv")
-    if set(calibration["score_type"]) != {
-        "raw weighted model score (not calibrated)", "isotonic-calibrated probability"
-    }:
+    expected_calibration_types = {
+        f"{manifest['champion']}: raw model score (not calibrated)",
+        f"{manifest['champion']}: isotonic-calibrated probability",
+        f"{manifest['runner_up']}: raw model score (not calibrated)",
+        f"{manifest['runner_up']}: isotonic-calibrated probability",
+    }
+    if set(calibration["score_type"]) != expected_calibration_types:
         fail("test_calibration.csv has unexpected or missing score types.")
     calibrated_row = calibration.loc[
-        calibration["score_type"] == "isotonic-calibrated probability"
+        calibration["score_type"] == f"{manifest['champion']}: isotonic-calibrated probability"
     ].iloc[0]
     if not np.isclose(float(calibrated_row["brier_score"]), np.mean((probs - y) ** 2), atol=1e-8, rtol=0):
         fail("Calibrated test Brier score does not match test_scored.csv.")
@@ -139,13 +144,21 @@ def main() -> int:
         "Champion vs v1 at threshold 0.50",
         "Champion vs approve-all",
         "Champion vs v1 own cost-optimal threshold",
+        "Champion vs runner-up",
     }
     if not expected_comparisons.issubset(set(paired["comparison"])):
         fail("test_paired_diffs.csv is missing one or more required comparisons.")
     if not np.isfinite(paired.select_dtypes(include=[np.number]).to_numpy()).all():
         fail("test_paired_diffs.csv contains non-finite numeric entries.")
 
-    # G6: Relational ablation comparison must be paired fold-by-fold.
+    # G6: Champion/runner-up comparison and relational ablations must be fold-aligned.
+    model_pair = pd.read_csv(RESULTS / "champion_runnerup_fold_diffs.csv")
+    if len(model_pair) != 5:
+        fail("Champion-versus-runner-up fold comparison must contain five paired folds.")
+    if set(model_pair["champion"]) != {manifest["champion"]} or set(model_pair["runner_up"]) != {manifest["runner_up"]}:
+        fail("Champion-versus-runner-up folds disagree with run_manifest.")
+    if not np.isfinite(model_pair.select_dtypes(include=[np.number]).to_numpy()).all():
+        fail("Champion-versus-runner-up fold differences contain non-finite values.")
     if len(ablation) != 4 or len(ablation_folds) != 15:
         fail("Relational ablation must contain four scorecard rows and 15 paired fold rows.")
     if not {"policy", "pr_auc", "roc_auc", "pr_auc_delta_vs_configured"}.issubset(policy.columns):
