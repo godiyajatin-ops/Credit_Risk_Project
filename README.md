@@ -108,8 +108,8 @@ pip install -r requirements.txt
 ```
 
 1. Put the three raw CSV files in `data/raw/`.
-2. Open `Notebooks/modeling_extension.ipynb` from the repository root in Jupyter.
-3. Restart the kernel and run all cells in order. The notebook regenerates scorecards and figures under `results/` and `assets/`, including a run manifest.
+2. Open `Notebooks/credit_risk_analysis.ipynb` from the repository root in Jupyter and run all cells. Confirm the baseline reconciliation assertion passes; the core baseline model procedure is unchanged.
+3. Open `Notebooks/modeling_extension.ipynb`, restart its kernel, and run all cells in order. This regenerates scorecards and figures under `results/` and `assets/`, including a run manifest.
 4. Run the verification script from the repository root:
 
    ```bash
