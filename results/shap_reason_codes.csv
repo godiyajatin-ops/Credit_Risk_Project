@@ -5,6 +5,6 @@ High-Risk,0.7812,Decline,3,EXT_SOURCE_2,0.0063,0.4104,External risk score 2 cont
 Borderline Near Threshold,0.168,Decline,1,CREDIT_TO_GOODS,1.4224,0.3884,Loan amount exceeds the appraised market price of financed goods
 Borderline Near Threshold,0.168,Decline,2,CREDIT_TERM,0.0488,0.2577,Loan payment-to-credit term structure indicates elevated amortization burden
 Borderline Near Threshold,0.168,Decline,3,DEF_60_CNT_SOCIAL_CIRCLE,1.0,0.189,Adverse risk contribution from attribute: DEF_60_CNT_SOCIAL_CIRCLE
-Low-Risk,0.0001,Approve,1,AGE_YEARS,67.2745,0.1351,Adverse risk contribution from attribute: AGE_YEARS
-Low-Risk,0.0001,Approve,2,DAYS_REGISTRATION,-4794.0,0.0334,Adverse risk contribution from attribute: DAYS_REGISTRATION
-Low-Risk,0.0001,Approve,3,BASEMENTAREA_MEDI,Missing,0.0308,Adverse risk contribution from attribute: BASEMENTAREA_MEDI
+Low-Risk,0.0001,Approve,1,DAYS_REGISTRATION,-4794.0,0.0334,Adverse risk contribution from attribute: DAYS_REGISTRATION
+Low-Risk,0.0001,Approve,2,BASEMENTAREA_MEDI,Missing,0.0308,Adverse risk contribution from attribute: BASEMENTAREA_MEDI
+Low-Risk,0.0001,Approve,3,FLAG_DOCUMENT_5,1.0,0.0299,Adverse risk contribution from attribute: FLAG_DOCUMENT_5

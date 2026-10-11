@@ -3,32 +3,33 @@
 # Bounded compatibility ranges; exact versions recorded in run_manifest.json after a validated run
 # =============================================================================
 
-# --- Core Data Wrangling & Numerical Stack ---
-numpy>=2.0.0,<=2.4.4
-pandas>=2.2.0,<=3.0.2
-scipy>=1.14.0,<=1.18.0
-openpyxl>=3.1.5
 
-# --- Machine Learning, Ensembles & Imbalance Stack ---
-scikit-learn>=1.5.0,<=1.9.0
-joblib>=1.4.0
-threadpoolctl>=3.5.0
-imbalanced-learn>=0.12.0
-lightgbm>=4.4.0,<=4.7.0
-xgboost>=2.1.0,<=3.4.1
+# Validated Credit Risk Project environment
+# Python 3.14.7
+# Exact versions of the project's selected direct and runtime dependencies.
 
-# --- Econometrics, Statistics & Explainability ---
-statsmodels>=0.14.0,<=0.14.6
-patsy>=0.5.6
-shap>=0.45.0
+numpy==2.4.4
+pandas==3.0.2
+scipy==1.18.0
+scikit-learn==1.9.0
+imbalanced-learn==0.14.2
 
-# --- Visualization & Portfolio Analytics ---
-matplotlib>=3.9.0,<=3.10.8
-seaborn>=0.13.0,<=0.13.2
-plotly>=5.22.0
+xgboost==3.4.1
+lightgbm==4.7.0
+shap==0.53.0
 
-# --- Interactive Development & Kernel Runtime ---
-jupyterlab>=4.2.0
-notebook>=7.2.0
-ipykernel>=6.29.0,<=7.3.0
-ipython>=8.20.0,<=9.12.0
+matplotlib==3.10.8
+seaborn==0.13.2
+plotly==7.1.0
+
+statsmodels==0.14.6
+patsy==1.0.2
+openpyxl==3.1.5
+
+joblib==1.5.3
+threadpoolctl==3.6.0
+
+jupyterlab==4.6.4
+notebook==7.6.3
+ipykernel==7.3.0
+ipython==9.12.0
