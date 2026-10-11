@@ -25,7 +25,7 @@ except ImportError:
 
 def calculate_risk_metrics(y_true: np.ndarray, y_prob: np.ndarray) -> Dict[str, float]:
     """
-    Calculates comprehensive institutional credit scoring metrics:
+    Calculates classification and ranking metrics for the credit-risk experiment:
     - ROC-AUC: Global class separation capability
     - PR-AUC: Average Precision (Primary metric under ~8% class imbalance)
     - Gini Coefficient: 2 * ROC-AUC - 1 (Standard banking discrimination metric)
@@ -67,7 +67,7 @@ def cv_oof_evaluate(
     Executes a strict 5-Fold Stratified Cross-Validation on the training partition:
     - Instantiates a clean pipeline per fold to guarantee zero data leakage.
     - Captures out-of-fold (OOF) default probability predictions.
-    - Saves out-of-fold array to results/oof_<model_name>.npy for Phase P3 calibration.
+    - Saves out-of-fold predictions to results/oof_<model_name>.npy for calibration and threshold selection.
     - Returns OOF predictions, overall scorecard, and fold-level metrics table.
     """
     skf = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_SEED)
