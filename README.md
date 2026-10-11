@@ -95,6 +95,7 @@ The updated notebook writes machine-readable outputs instead of requiring values
 - `results/cv_metrics.csv` and `results/cv_fold_metrics.csv`: model and fold-level ranking metrics.
 - `results/threshold_table.csv`: training-side threshold sensitivity under the illustrative cost ratios.
 - `results/test_metrics.csv` and `results/test_paired_diffs.csv`: holdout bootstrap intervals and paired comparisons.
+- `results/test_calibration.csv`: raw-score versus calibrated test Brier score, mean predicted probability versus observed prevalence, and score discreteness diagnostics.
 - `results/headline_costs.csv`: point estimates for approving everyone, v1 at 0.50, v1 at its own OOF-calibrated threshold, and the selected champion policy.
 - `results/test_scored.csv`: locked holdout predictions used to audit point estimates.
 - `results/imbalance_study.csv`: the tested class-imbalance configurations.
