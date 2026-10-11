@@ -35,7 +35,11 @@ Credit_Risk_Project/
 │   ├── evaluate.py                      # Cross-validation and bootstrap evaluation
 │   └── bureau_features.py               # Bureau/history aggregations
 ├── results/                             # Generated CSV/NPY tables and run manifest
-├── scripts/verify_results.py            # Result-integrity checks after a clean rerun
+├── scripts/
+│   ├── verify_notebook.py               # Notebook syntax and stale-output checks
+│   └── verify_results.py                # Result-integrity checks after a clean rerun
+├── tests/test_core.py                   # Dataset-independent helper tests
+├── .github/workflows/core-checks.yml    # CI on Python 3.12 and 3.14
 ├── assets/                              # Generated evaluation and SHAP figures
 ├── sql/                                 # PostgreSQL analytical artifacts
 ├── dashboards/                          # Power BI dashboard (if included locally)
@@ -110,6 +114,7 @@ After rerunning, interpret PR-AUC relative to default prevalence and include unc
 ## Limitations
 
 - One dataset and one fixed train/test split are used; external and temporal validation are not included.
+- `requirements.txt` currently defines bounded compatibility ranges, not a fully pinned lockfile. The run manifest records the exact versions used for a validated execution; produce a lockfile from the environment that completes the full notebook rerun before claiming bit-for-bit reproducibility.
 - Hyperparameters are fixed rather than tuned.
 - The cost function is a simplified decision-analysis scenario. It omits funding costs, capital requirements, recovery timing, pricing, exposure dynamics, and many operational constraints.
 - Excluding selected attributes does not establish fairness. Dedicated subgroup metrics, proxy analysis, legal review, and governance validation have not been completed.
