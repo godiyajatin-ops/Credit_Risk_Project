@@ -182,22 +182,27 @@ def bootstrap_test_evaluation(
 
     df_ci_summary = pd.DataFrame(summary_list)
 
-    # Paired Differences: Delta = (Baseline - Champion) -> Positive value means Champion saves money
-    diff_records = []
+    # Paired differences on the exact same valid bootstrap resamples.
     champ_key = "Champion (cost-optimal t*)"
-    v1_key = "Baseline v1 (5-feature LR)"
-
-    if champ_key in models and v1_key in models:
-        cost_diff_v1 = boot_cost[v1_key] - boot_cost[champ_key]
+    comparison_pairs = [
+        (champ_key, "Baseline v1 (5-feature LR)", "Champion vs v1 at threshold 0.50"),
+        (champ_key, "Approve everyone", "Champion vs approve-all"),
+        (champ_key, "Baseline v1 (OOF-calibrated cost-optimal t*)", "Champion vs v1 own cost-optimal threshold"),
+    ]
+    diff_records = []
+    for better, reference, label in comparison_pairs:
+        if better not in models or reference not in models:
+            continue
+        cost_saving = boot_cost[reference] - boot_cost[better]
+        pr_lift = boot_pr[better] - boot_pr[reference]
         diff_records.append({
-            "comparison": "Champion (t*) vs Baseline v1",
-            "cost_saving_mean": np.mean(cost_diff_v1),
-            "cost_saving_ci_lower": np.percentile(cost_diff_v1, 2.5),
-            "cost_saving_ci_upper": np.percentile(cost_diff_v1, 97.5),
-            "pr_auc_lift_mean": np.mean(boot_pr[champ_key] - boot_pr[v1_key]),
-            "pr_auc_lift_ci_lower": np.percentile(boot_pr[champ_key] - boot_pr[v1_key], 2.5),
-            "pr_auc_lift_ci_upper": np.percentile(boot_pr[champ_key] - boot_pr[v1_key], 97.5),
+            "comparison": label,
+            "cost_saving_mean": float(np.mean(cost_saving)),
+            "cost_saving_ci_lower": float(np.percentile(cost_saving, 2.5)),
+            "cost_saving_ci_upper": float(np.percentile(cost_saving, 97.5)),
+            "pr_auc_lift_mean": float(np.mean(pr_lift)),
+            "pr_auc_lift_ci_lower": float(np.percentile(pr_lift, 2.5)),
+            "pr_auc_lift_ci_upper": float(np.percentile(pr_lift, 97.5)),
         })
-
     df_diff_summary = pd.DataFrame(diff_records)
     return df_ci_summary, df_diff_summary
