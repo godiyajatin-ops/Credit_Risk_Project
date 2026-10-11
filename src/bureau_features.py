@@ -110,16 +110,16 @@ def build_bureau_features(data_dir: Path = DATA_DIR) -> pd.DataFrame:
 
 def build_previous_app_features(data_dir: Path = DATA_DIR) -> pd.DataFrame:
     """
-    Extracts, cleans, and aggregates internal loan origination history from previous_application.csv (1.67M rows).
+    Extracts and aggregates internal loan origination history from previous_application.csv (1.67M rows).
 
     Aggregates per SK_ID_CURR:
     - PREV_APP_COUNT: Total prior applications with this institution
     - PREV_APPROVED_COUNT: Count of previously approved facilities
     - PREV_REFUSED_COUNT: Count of previously declined loan requests
     - PREV_REFUSAL_RATE: Historical bank rejection rate (Refused / Total)
-    - PREV_AMT_APPLICATION_MEAN: Average loan amount requested
-    - PREV_AMT_CREDIT_MEAN: Average principal amount actually disbursed
-    - PREV_CREDIT_APP_RATIO_MEAN: Ratio of granted credit vs requested amount
+    - PREV_AMT_APPLICATION_MEAN: Average amount requested on approved prior applications
+    - PREV_AMT_CREDIT_MEAN: Average approved prior credit amount
+    - PREV_CREDIT_APP_RATIO_MEAN: Approved credit-to-requested-amount ratio
     - PREV_DAYS_DECISION_MAX: Most recent prior application recency (days before current)
     - HAS_PREV: Flag indicating prior relationship history with the bank
     """
